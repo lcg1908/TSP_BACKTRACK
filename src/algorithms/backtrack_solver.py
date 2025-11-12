@@ -25,45 +25,46 @@ class BacktrackSolver(BaseSolver):
         """
         
         # --- TODO 1: Thiết lập ban đầu ---
-        # 1. Đặt cờ self.is_running = True
-        # 2. Gọi self.start_timer()
-        # 3. Lấy matrix và num_cities từ self.tsp_problem
-        # 4. Tạo mảng visited (ví dụ: [False] * num_cities)
-        # 5. Tạo current_path ban đầu (ví dụ: [0])
-        # 6. Đánh dấu visited[0] = True
-        # ... (Code setup ở đây) ...
+        self.is_running = True
+        self.start_timer()
+        
+        matrix = self.tsp_problem.dist_matrix
+        num_cities = self.tsp_problem.num_cities
+        
+        # Kiểm tra nếu không có dữ liệu
+        if num_cities == 0:
+            self.stop_timer()
+            if finish_callback:
+                finish_callback(self.best_path, self.min_cost, self.runtime)
+            return
+        
+        # Tạo mảng visited và current_path ban đầu
+        visited = [False] * num_cities
+        current_path = [0]  # Bắt đầu từ thành phố 0
+        visited[0] = True  # Đánh dấu thành phố 0 đã thăm
         
         print("Bắt đầu chạy Backtracking...")
 
         # --- TODO 2: Bắt đầu đệ quy ---
-        # Gọi hàm _backtrack_recursive(...) lần đầu tiên
-        # (Nên bọc trong try...except để bắt lỗi)
         try:
-            # Viết code gọi hàm đệ quy của bạn ở đây
-            # Ví dụ:
-            # self._backtrack_recursive(
-            #     current_city=0,
-            #     count=1,
-            #     current_cost=0,
-            #     current_path=..., 
-            #     visited=...,
-            #     matrix=...,
-            #     num_cities=...,
-            #     update_callback=update_callback,
-            #     sleep_time=sleep_time
-            # )
-            pass # Xóa pass khi viết code
-
+            self._backtrack_recursive(
+                current_city=0,
+                count=1,
+                current_cost=0,
+                current_path=current_path,
+                visited=visited,
+                matrix=matrix,
+                num_cities=num_cities,
+                update_callback=update_callback,
+                sleep_time=sleep_time
+            )
         except Exception as e:
             print(f"Lỗi xảy ra trong Backtracking: {e}")
         
         # --- TODO 3: Hoàn thành ---
-        # (Luôn chạy sau khi đệ quy kết thúc hoặc lỗi)
-        
-        # 1. Gọi self.stop_timer()
-        # 2. Gọi finish_callback(self.best_path, self.min_cost, self.runtime)
-        
-        # ... (Code cleanup ở đây) ...
+        self.stop_timer()
+        if finish_callback:
+            finish_callback(self.best_path, self.min_cost, self.runtime)
         
         print(f"Backtracking hoàn thành. Chi phí: {self.min_cost}, Thời gian: {self.runtime:.4f}s")
 
@@ -75,32 +76,62 @@ class BacktrackSolver(BaseSolver):
         """
 
         # --- TODO 1: Kiểm tra dừng (Bắt buộc) ---
-        # if not self.is_running:
-        #     return
+        if not self.is_running:
+            return
         
         # --- TODO 2: (Tùy chọn) Cắt tỉa (Pruning) ---
-        # (Đây là nơi để thêm các kỹ thuật cải tiến)
-        # Ví dụ: if current_cost >= self.min_cost: return
+        # Nếu chi phí hiện tại đã lớn hơn hoặc bằng chi phí tốt nhất, không cần tiếp tục
+        if current_cost >= self.min_cost:
+            return
         
         # --- TODO 3: Điều kiện cơ bản (Base Case) ---
-        # (Khi count == num_cities - tức là đã đi hết)
-        # 1. Tính chi phí quay về 0 (cost_back_to_start)
-        # 2. Tính total_cost
-        # 3. So sánh if total_cost < self.min_cost:
-        # 4.    Cập nhật self.min_cost, self.best_path
-        # 5.    Gọi update_callback(self.best_path)
-        # 6. return
+        # Khi đã đi hết tất cả các thành phố (count == num_cities)
+        if count == num_cities:
+            # Tính chi phí quay về thành phố 0 (điểm xuất phát)
+            cost_back_to_start = matrix[current_city][0]
+            total_cost = current_cost + cost_back_to_start
+            
+            # So sánh và cập nhật nếu tốt hơn
+            if total_cost < self.min_cost:
+                self.min_cost = total_cost
+                # Tạo đường đi hoàn chỉnh (thêm thành phố 0 ở cuối để tạo chu trình)
+                self.best_path = current_path + [0]
+                
+                # Gọi callback để cập nhật giao diện
+                if update_callback:
+                    update_callback(self.best_path)
+            return
         
         # --- TODO 4: Bước đệ quy (Recursive Step) ---
-        # Lặp for next_city in range(num_cities):
-        # 1.  Kiểm tra if (not visited[next_city] and ...điều kiện khác...):
-        # 2.      (Bước "Thử")
-        # 3.      Đánh dấu visited[next_city] = True
-        # 4.      Thêm next_city vào current_path
-        # 5.      (Tùy chọn) time.sleep(sleep_time)
-        # 6.      Gọi đệ quy self._backtrack_recursive(...) với các tham số mới
-        # 7.      (Bước "Quay lui")
-        # 8.      Xóa next_city khỏi current_path (pop)
-        # 9.      Đánh dấu visited[next_city] = False
-        
-        pass # Xóa pass khi viết code
+        # Thử từng thành phố tiếp theo
+        for next_city in range(num_cities):
+            # Chỉ thử các thành phố chưa thăm
+            if not visited[next_city]:
+                # Bước "Thử": Thêm thành phố vào đường đi
+                visited[next_city] = True
+                current_path.append(next_city)
+                
+                # Tính chi phí đi từ thành phố hiện tại đến thành phố tiếp theo
+                cost_to_next = matrix[current_city][next_city]
+                new_cost = current_cost + cost_to_next
+                
+                # (Tùy chọn) Sleep để làm chậm quá trình (cho việc visualization)
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
+                
+                # Gọi đệ quy với trạng thái mới
+                self._backtrack_recursive(
+                    current_city=next_city,
+                    count=count + 1,
+                    current_cost=new_cost,
+                    current_path=current_path,
+                    visited=visited,
+                    matrix=matrix,
+                    num_cities=num_cities,
+                    update_callback=update_callback,
+                    sleep_time=sleep_time
+                )
+                
+                # Bước "Quay lui": Xóa thành phố khỏi đường đi và đánh dấu chưa thăm
+                current_path.pop()  # Xóa thành phố cuối cùng
+                visited[next_city] = False
