@@ -51,7 +51,6 @@ class TSPApp:
 
         # Khởi tạo biến trước khi tạo UI
         self.num_cities_var = tk.IntVar(value=5)
-
         self.vis_nodes = []
         self.tsp_problem = TSPProblem()
         self.solver = None
@@ -66,11 +65,11 @@ class TSPApp:
         self.num_cities_var.trace_add("write", self._on_num_cities_change)
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
 
-        self._reset()
-
+        #Buộc Tkinter cập nhật và vẽ cửa sổ để lấy kích thước thật
         self.root.update()
-        self._redraw_canvas()
-        self._clear_comparison_charts()
+
+        #Bây giờ canvas đã có kích thước thật, ta mới gọi _reset()
+        self._reset()
 
     def _on_close(self):
         if self.solver:
@@ -401,7 +400,22 @@ class TSPApp:
 
         self.cost_label.config(text="Chi phí tốt nhất: N/A")
         self.best_path_label.config(text="")
-        self._generate_vis_nodes(self.tsp_problem.num_cities)
+
+        n_cities = self.tsp_problem.num_cities
+        current_matrix = self.tsp_problem.dist_matrix
+        if n_cities > 0 and current_matrix:
+            try:
+                # Thử dùng MDS để tạo vị trí từ ma trận khoảng cách
+                self.vis_nodes = self._generate_positions_from_distances(current_matrix)
+            except Exception as e:
+                # Nếu thất bại (ví dụ: ma trận không đối xứng, MDS lỗi),
+                # thì quay về cách vẽ vòng tròn
+                self._generate_vis_nodes(n_cities)
+        else:
+            # Nếu không có ma trận (chế độ input chưa nhấn tạo)
+            self._generate_vis_nodes(n_cities)
+
+
         self._update_city_treeview()
         self._lock_controls(False)
         self._redraw_canvas()
@@ -432,15 +446,20 @@ class TSPApp:
             row_values = [f"{matrix[i][j]:.0f}" if matrix[i][j] != float('inf') else "Inf" for j in range(n)]
             self.city_treeview.insert("", tk.END, text=f"{i}", values=row_values)
 
+
+    '''Hàm "quản lý trạng thái" của giao diện. 
+    Nhiệm vụ: bật (enable) hoặc tắt (disable) các nút bấm, ô chọn, và thanh trượt, dựa trên việc thuật toán có đang chạy hay không.
+    Hàm này nhận một tham số: is_running (là True nếu thuật toán đang chạy, False nếu không).'''
     def _lock_controls(self, is_running):
         run_state = tk.DISABLED if is_running else tk.NORMAL
-        reset_state = tk.NORMAL if not is_running else tk.DISABLED
+        #Nút reset bật bất cứ lúc nào
+        reset_state = tk.NORMAL
         self.run_btn.config(state=run_state)
         self.reset_btn.config(state=reset_state)
         other_state = tk.DISABLED if is_running else tk.NORMAL
         self.solver_combo.config(state=other_state)
         self.speed_slider.config(state=other_state)
-        # Treeview does not support config(state=...), use .state()
+
         try:
             if other_state == tk.DISABLED:
                 self.city_treeview.state(['disabled'])
@@ -457,7 +476,7 @@ class TSPApp:
         try:
             self.num_cities_spinbox.config(state=input_state)
         except Exception:
-            # some ttk versions may not accept config state on Spinbox
+
             try:
                 if input_state == tk.DISABLED:
                     self.num_cities_spinbox.state(['disabled'])
@@ -562,7 +581,7 @@ class TSPApp:
         except Exception as e:
             print(f"Lỗi không xác định khi vẽ đường đi: {e}")
 
-    # Charts
+    # Hàm vẽ Charts
     def _clear_comparison_charts(self):
         self.comparison_results = {}
         if hasattr(self, 'ax_runtime') and hasattr(self, 'ax_cost'):
