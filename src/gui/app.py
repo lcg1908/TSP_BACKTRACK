@@ -8,7 +8,7 @@ import random
 import math
 from src.models.tsp_problem import TSPProblem
 from src.algorithms.backtrack_solver import BacktrackSolver
-# from src.algorithms.backtrack_solver_improved import BacktrackSolverImproved
+from src.algorithms.backtrack_solver_improved import BacktrackSolverImproved
 # from src.algorithms.pso_solver import PSOSolver
 
 from matplotlib.figure import Figure
@@ -31,7 +31,7 @@ DEFAULT_MATRIX_1D = [
 
 SOLVER_CLASSES = {
     "Backtracking (Cơ bản)": BacktrackSolver, #Sửa Solver ở đây
-    "Backtracking (Cải tiến)": BacktrackSolver,#Sửa Solver ở đây
+    "Backtracking (Cải tiến)": BacktrackSolverImproved,#Sửa Solver ở đây
     "ACO (Metaheuristic)": BacktrackSolver,#Sửa Solver ở đây
 }
 
