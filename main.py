@@ -9,4 +9,3 @@ if __name__ == "__main__":
         root.mainloop()
     except Exception as e:
         print(f"Đã xảy ra lỗi: {e}")
-        # Thêm xử lý lỗi nếu cần
