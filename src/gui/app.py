@@ -9,7 +9,7 @@ import math
 from src.models.tsp_problem import TSPProblem
 from src.algorithms.backtrack_solver import BacktrackSolver
 from src.algorithms.backtrack_solver_improved import BacktrackSolverImproved
-# from src.algorithms.pso_solver import PSOSolver
+from src.algorithms.pso_solver import ACOSolver
 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -32,7 +32,7 @@ DEFAULT_MATRIX_1D = [
 SOLVER_CLASSES = {
     "Backtracking (Cơ bản)": BacktrackSolver, 
     "Backtracking (Cải tiến)": BacktrackSolverImproved,
-    "ACO (Metaheuristic)": BacktrackSolver,#Sửa Solver ở đây
+    "ACO (Metaheuristic)": ACOSolver
 }
 
 ALL_SOLVER_NAMES = [
