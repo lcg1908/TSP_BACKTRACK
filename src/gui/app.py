@@ -201,8 +201,8 @@ class TSPApp:
         spinbox_frame.pack(fill=tk.X)
         ttk.Label(spinbox_frame, text="Số thành phố:").pack(side=tk.LEFT, padx=(0, 3))
 
-        #giới hạn 3-50 node
-        self.num_cities_spinbox = ttk.Spinbox(spinbox_frame, from_=3, to=50,
+        #giới hạn 3-100 node
+        self.num_cities_spinbox = ttk.Spinbox(spinbox_frame, from_=3, to=100,
                                               textvariable=self.num_cities_var, width=3)
         self.num_cities_spinbox.pack(side=tk.LEFT)
         self.random_btn = ttk.Button(spinbox_frame, text="Tạo ngẫu nhiên",
