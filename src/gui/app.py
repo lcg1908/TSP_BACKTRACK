@@ -9,7 +9,7 @@ import math
 from src.models.tsp_problem import TSPProblem
 from src.algorithms.backtrack_solver import BacktrackSolver
 from src.algorithms.backtrack_solver_improved import BacktrackSolverImproved
-from src.algorithms.pso_solver import ACOSolver
+from src.algorithms.aso_solver import ACOSolver
 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
