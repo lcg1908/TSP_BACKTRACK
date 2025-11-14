@@ -234,14 +234,6 @@ class TSPApp:
         self.reset_btn = ttk.Button(action_frame, text="Reset", command=self._reset)
         self.reset_btn.pack(fill=tk.X, ipady=2, pady=3, padx=5)
 
-        speed_frame = ttk.Frame(action_frame)
-        speed_frame.pack(fill=tk.X, pady=(5, 3), padx=3)
-        ttk.Label(speed_frame, text="Tốc độ:").pack(side=tk.LEFT)
-        self.speed_var = tk.DoubleVar(value=0.01)
-        #kéo thanh càng cao → chương trình càng chậm (vì sleep lâu hơn).
-        self.speed_slider = ttk.Scale(speed_frame, from_=0, to=5,
-                                      orient=tk.HORIZONTAL, variable=self.speed_var)
-        self.speed_slider.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
 
         # Status
         status_frame = ttk.LabelFrame(control_frame, text="Trạng thái")
@@ -362,8 +354,7 @@ class TSPApp:
         self.cost_label.config(text="Chi phí tốt nhất: Đang tìm...")
         self.best_path_label.config(text="")
         self.solver = SolverClass(self.tsp_problem)
-        #kéo thanh càng cao → chương trình càng chậm (vì sleep lâu hơn).
-        sleep_time = float(self.speed_var.get())
+        sleep_time = 0.0
         self.solver_thread = threading.Thread(target=self.solver.solve,
                                               args=(self._update_path_visual, self._on_solver_finish, sleep_time))
         self.solver_thread.daemon = True
@@ -458,7 +449,6 @@ class TSPApp:
         self.reset_btn.config(state=reset_state)
         other_state = tk.DISABLED if is_running else tk.NORMAL
         self.solver_combo.config(state=other_state)
-        self.speed_slider.config(state=other_state)
 
         try:
             if other_state == tk.DISABLED:
