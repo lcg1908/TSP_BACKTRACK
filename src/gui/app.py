@@ -27,11 +27,11 @@ DEFAULT_MATRIX_1D = [
     [0, 10, 8, 9, 7], [15, 0, 10, 5, 6], [12, 13, 0, 8, 9],
     [11, 7, 18, 0, 6], [14, 6, 11, 4, 0]
 ]
-# --- HẾT DỮ LIỆU MẪU ---
+
 
 SOLVER_CLASSES = {
-    "Backtracking (Cơ bản)": BacktrackSolver, #Sửa Solver ở đây
-    "Backtracking (Cải tiến)": BacktrackSolverImproved,#Sửa Solver ở đây
+    "Backtracking (Cơ bản)": BacktrackSolver, 
+    "Backtracking (Cải tiến)": BacktrackSolverImproved,
     "ACO (Metaheuristic)": BacktrackSolver,#Sửa Solver ở đây
 }
 
