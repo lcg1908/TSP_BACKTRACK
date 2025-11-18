@@ -10,9 +10,11 @@ from src.models.tsp_problem import TSPProblem
 from src.algorithms.backtrack_solver import BacktrackSolver
 from src.algorithms.backtrack_solver_improved import BacktrackSolverImproved
 from src.algorithms.aco_solver import ACOSolver
-
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+# IMPORT CỬA SỔ CON
+from .benchmark_window import BenchmarkWindow
 
 # --- DỮ LIỆU MẪU ---
 DEFAULT_MATRIX_2D = [
@@ -70,6 +72,19 @@ class TSPApp:
 
         #Bây giờ canvas đã có kích thước thật, ta mới gọi _reset()
         self._reset()
+        self.benchmark_win = None # Biến để kiểm tra cửa sổ con đã mở chưa
+
+
+    def open_benchmark_window(self):
+            """Mở cửa sổ thử nghiệm"""
+            # Kiểm tra xem cửa sổ đã mở chưa, nếu rồi thì "focus" nó
+            if self.benchmark_win and self.benchmark_win.winfo_exists():
+                self.benchmark_win.focus()
+            else:
+                # Nếu chưa, tạo một cửa sổ Toplevel mới
+                # self.root là cửa sổ cha
+                self.benchmark_win = BenchmarkWindow(self.root)
+                self.benchmark_win.title("Thử nghiệm thuật toán")
 
     def _on_close(self):
         if self.solver:
@@ -185,6 +200,15 @@ class TSPApp:
         control_frame = ttk.Frame(main_frame, width=350, padding="10")
         control_frame.pack(side=tk.LEFT, fill=tk.Y, padx=(0, 10))
         control_frame.pack_propagate(False)
+
+        # --- THÊM NÚT BENCHMARK WINDOW ---
+        self.benchmark_button = ttk.Button(
+            control_frame, 
+            text="Chạy Thử Nghiệm (Benchmark)", 
+            command=self.open_benchmark_window
+        )
+        self.benchmark_button.pack(fill="x", padx=10, pady=(0, 5)) # Gói trực tiếp vào sidebar
+        # -----------------------------------------------------------
 
         # Chọn chế độ
         self.mode_frame = ttk.LabelFrame(control_frame, text="Chế độ")
