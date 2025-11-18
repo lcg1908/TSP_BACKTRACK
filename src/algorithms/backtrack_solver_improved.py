@@ -5,12 +5,13 @@ from .base_solver import BaseSolver
 class BacktrackSolverImproved(BaseSolver):
     """
     Backtracking cải tiến dùng:
-      - LCV (Least Cost Value)
-      - Branch & Bound (cắt tỉa theo giới hạn dưới)
+      - LCV (Least Cost Value) - Sắp xếp thứ tự duyệt
+      - Branch & Bound (Cắt tỉa theo giới hạn dưới)
     """
 
     def __init__(self, tsp_problem):
         super().__init__(tsp_problem)
+        self.min_edge = []
 
     def solve(self, update_callback=None, finish_callback=None, sleep_time=0):
         self.is_running = True
@@ -24,15 +25,17 @@ class BacktrackSolverImproved(BaseSolver):
             if finish_callback:
                 finish_callback(self.best_path, self.min_cost, self.runtime)
             return
-
+        print("Bắt đầu chạy Backtrack cải tiến...")
         visited = [False] * num_cities
         current_path = [0]
         visited[0] = True
 
-        print("Bắt đầu Backtracking cải tiến ...")
-
-        # Khởi tạo chi phí trung bình tối thiểu của mỗi hàng — dùng cho bound
-        self.min_edge = [min([d for d in row if d > 0], default=0) for row in matrix]
+        # --- TÍNH TOÁN TRƯỚC CHO BOUND ---
+        # Tìm cạnh nhỏ nhất đi ra từ mỗi thành phố (bỏ qua 0 và inf)
+        self.min_edge = []
+        for row in matrix:
+            valid_costs = [c for c in row if c > 0 and c != float('inf')]
+            self.min_edge.append(min(valid_costs) if valid_costs else 0)
 
         try:
             self._backtrack_recursive_improved(
@@ -47,33 +50,40 @@ class BacktrackSolverImproved(BaseSolver):
                 sleep_time=sleep_time
             )
         except Exception as e:
-            print(f"Lỗi trong quá trình chạy: {e}")
+            print(f"Lỗi trong quá trình chạy Improved: {e}")
 
         self.stop_timer()
         if finish_callback:
             finish_callback(self.best_path, self.min_cost, self.runtime)
 
-        print(f"Hoàn tất! Chi phí tối thiểu: {self.min_cost}, Thời gian: {self.runtime:.4f}s")
+        print(f"Backtrack cải tiến hoàn thành. Chi phí: {self.min_cost}, Thời gian: {self.runtime:.4f}s")
 
-    
     def _backtrack_recursive_improved(self, current_city, count, current_cost, current_path,
-                   visited, matrix, num_cities, update_callback, sleep_time):
+                                   visited, matrix, num_cities, update_callback, sleep_time):
 
         if not self.is_running:
             return
 
-        # Cắt tỉa 1: Nếu cost hiện tại đã >= best → dừng
+        # --- CẮT TỈA 1: So sánh trực tiếp ---
         if current_cost >= self.min_cost:
             return
 
-        # Cắt tỉa 2: Tính giới hạn dưới (Bound)
-        lower_bound = self._estimate_lower_bound(current_cost, visited)
+        # --- CẮT TỈA 2: Tính giới hạn dưới (Lower Bound) ---
+        # Bound = Chi phí đã đi + (Tổng các cạnh nhỏ nhất của các đỉnh CHƯA đi)
+        # Điều này ước lượng kịch bản "lạc quan nhất"
+        lower_bound = current_cost + sum(self.min_edge[i] for i in range(num_cities) if not visited[i])
+        
         if lower_bound >= self.min_cost:
             return
 
-        # Nếu đã đi hết các thành phố
+        # --- BASE CASE: Đã đi hết ---
         if count == num_cities:
-            total_cost = current_cost + matrix[current_city][0]
+            cost_back = matrix[current_city][0]
+            # Kiểm tra đường về
+            if cost_back == float('inf'):
+                return
+
+            total_cost = current_cost + cost_back
             if total_cost < self.min_cost:
                 self.min_cost = total_cost
                 self.best_path = current_path + [0]
@@ -81,16 +91,21 @@ class BacktrackSolverImproved(BaseSolver):
                     update_callback(self.best_path)
             return
 
-        # Sắp xếp theo LCV — thành phố có cạnh chi phí nhỏ hơn đi trước
-        next_cities = self._sort_next_cities_lcv(current_city, visited, matrix, num_cities)
+        # --- LCV HEURISTIC: Sắp xếp thứ tự duyệt ---
+        # Ưu tiên đi sang thành phố có chi phí thấp trước
+        # Điều này giúp tìm ra một lời giải tốt (Good Solution) sớm hơn -> Cắt tỉa hiệu quả hơn
+        next_cities = self._get_sorted_next_cities(current_city, visited, matrix, num_cities)
 
         for next_city in next_cities:
-            if visited[next_city] or matrix[current_city][next_city] <= 0:
+            cost_move = matrix[current_city][next_city]
+            
+            # Bỏ qua nếu không có đường đi
+            if cost_move == float('inf'):
                 continue
 
             visited[next_city] = True
             current_path.append(next_city)
-            new_cost = current_cost + matrix[current_city][next_city]
+            new_cost = current_cost + cost_move
 
             if sleep_time > 0:
                 time.sleep(sleep_time)
@@ -107,22 +122,24 @@ class BacktrackSolverImproved(BaseSolver):
                 sleep_time=sleep_time
             )
 
+            # Backtrack
             current_path.pop()
             visited[next_city] = False
 
-    def _estimate_lower_bound(self, current_cost, visited):
+    def _get_sorted_next_cities(self, current_city, visited, matrix, num_cities):
         """
-        Tính giới hạn dưới: cost hiện tại + tổng chi phí cạnh thấp nhất của các thành phố chưa thăm.
+        Trả về danh sách các thành phố tiếp theo chưa thăm, 
+        được sắp xếp tăng dần theo chi phí đi từ current_city.
         """
-        remaining_min_cost = sum(self.min_edge[i] for i, v in enumerate(visited) if not v)
-        return current_cost + remaining_min_cost
-
-    def _sort_next_cities_lcv(self, current_city, visited, matrix, num_cities):
-        """
-        LCV: Ưu tiên thành phố có chi phí đi thấp hơn trước.
-        """
-        unvisited = [i for i in range(num_cities) if not visited[i] and matrix[current_city][i] > 0]
-        sorted_cities = sorted(unvisited, key=lambda c: matrix[current_city][c])
-        return sorted_cities
-
-     
+        candidates = []
+        for i in range(num_cities):
+            if not visited[i]:
+                cost = matrix[current_city][i]
+                if cost != float('inf'): # Chỉ thêm nếu có đường đi
+                    candidates.append((i, cost))
+        
+        # Sắp xếp theo chi phí (thành phần thứ 2 của tuple)
+        candidates.sort(key=lambda x: x[1])
+        
+        # Trả về danh sách chỉ số thành phố
+        return [c[0] for c in candidates]
