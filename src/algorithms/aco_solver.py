@@ -127,7 +127,7 @@ class ACOSolver(BaseSolver):
         return probabilities
         
     def _build_single_ant_path(self, num_cities, matrix):
-        start_city = random.randint(0, num_cities - 1)
+        start_city = 0
         path = [start_city]
         visited = [False] * num_cities
         visited[start_city] = True
