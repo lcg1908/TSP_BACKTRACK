@@ -169,7 +169,7 @@ class BenchmarkWindow(tk.Toplevel):
                     scenario_data["cost_bt"].append(c_bt)
                     scenario_data["time_bt"].append(t_bt)
 
-                # 3. Chạy Backtrack Cải tiến (Giới hạn N < 16)
+                # 3. Chạy Backtrack Cải tiến (Giới hạn N <= 12)
                 if n > 12:
                     # Quá tải -> Gán 0 để ngắt biểu đồ
                     scenario_data["cost_bti"].append(0)
@@ -212,7 +212,7 @@ class BenchmarkWindow(tk.Toplevel):
             
             n_vals = data["n"]
 
-            # --- BIỂU ĐỒ 1: THỜI GIAN (GIỮ NGUYÊN) ---
+            # --- BIỂU ĐỒ 1: THỜI GIAN ---
             ax_time.clear()
             ax_time.plot(n_vals, data["time_bt"], label="Backtrack", marker='o', markersize=4, color='#1f77b4')
             ax_time.plot(n_vals, data["time_bti"], label="BT Cải tiến", marker='s', markersize=4, color='#ff7f0e')
@@ -303,4 +303,5 @@ class BenchmarkWindow(tk.Toplevel):
                 # 20% đường đi vô cực
                 matrix[i][j] = float('inf') if random.random() < 0.2 else random.randint(10, 100)
         return matrix
+
 
