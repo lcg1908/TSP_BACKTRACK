@@ -1,6 +1,8 @@
 Hướng dẫn chạy:
 
-Mở terminal:
+1. Download folder dự án về máy
+
+2. Mở terminal:
 
 cd "địa chỉ folder trong máy"
 
