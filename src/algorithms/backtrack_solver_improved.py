@@ -6,7 +6,7 @@ class BacktrackSolverImproved(BaseSolver):
     """
     Backtracking cải tiến dùng:
       - LCV (Least Cost Value) - Sắp xếp thứ tự duyệt
-      - Branch & Bound (Cắt tỉa theo giới hạn dưới)
+      - Lower Bound Pruning (Cắt tỉa theo giới hạn dưới)
     """
 
     def __init__(self, tsp_problem):
