@@ -19,18 +19,23 @@ class BacktrackSolverImproved(BaseSolver):
 
         matrix = self.tsp_problem.dist_matrix
         num_cities = self.tsp_problem.num_cities
-
+        
+        # Nếu không có thành phố nào → dừng luôn
         if num_cities == 0:
             self.stop_timer()
             if finish_callback:
                 finish_callback(self.best_path, self.min_cost, self.runtime)
             return
         print("Bắt đầu chạy Backtrack cải tiến...")
+        
+        # Mảng đánh dấu các thành phố đã đi
         visited = [False] * num_cities
+
+        # Bắt đầu từ thành phố 0
         current_path = [0]
         visited[0] = True
 
-        # --- TÍNH TOÁN TRƯỚC CHO BOUND ---
+        # TÍNH TOÁN TRƯỚC CHO BOUND
         # Tìm cạnh nhỏ nhất đi ra từ mỗi thành phố (bỏ qua 0 và inf)
         self.min_edge = []
         for row in matrix:
@@ -60,42 +65,49 @@ class BacktrackSolverImproved(BaseSolver):
 
     def _backtrack_recursive_improved(self, current_city, count, current_cost, current_path,
                                    visited, matrix, num_cities, update_callback, sleep_time):
-
+        
+        # Nếu người dùng bấm STOP → dừng đệ quy
         if not self.is_running:
             return
 
-        # --- CẮT TỈA 1: So sánh trực tiếp ---
+        # CẮT TỈA 1: So sánh trực tiếp
         if current_cost >= self.min_cost:
             return
 
-        # --- CẮT TỈA 2: Tính giới hạn dưới (Lower Bound) ---
+        # CẮT TỈA 2: Tính giới hạn dưới (Lower Bound)
         # Bound = Chi phí đã đi + (Tổng các cạnh nhỏ nhất của các đỉnh CHƯA đi)
         # Điều này ước lượng kịch bản "lạc quan nhất"
         lower_bound = current_cost + sum(self.min_edge[i] for i in range(num_cities) if not visited[i])
-        
         if lower_bound >= self.min_cost:
             return
 
-        # --- BASE CASE: Đã đi hết ---
+        # Khi đã đi qua hết tất cả thành phố
         if count == num_cities:
+            
+            # Chi phí quay về thành phố xuất phát
             cost_back = matrix[current_city][0]
+            
             # Kiểm tra đường về
             if cost_back == float('inf'):
                 return
 
             total_cost = current_cost + cost_back
+            
+            # Nếu tìm được hành trình tốt hơn → update
             if total_cost < self.min_cost:
                 self.min_cost = total_cost
                 self.best_path = current_path + [0]
+                
                 if update_callback:
                     update_callback(self.best_path)
-            return
+            return # Kết thúc nhánh đệ quy
 
         # --- LCV HEURISTIC: Sắp xếp thứ tự duyệt ---
         # Ưu tiên đi sang thành phố có chi phí thấp trước
         # Điều này giúp tìm ra một lời giải tốt (Good Solution) sớm hơn -> Cắt tỉa hiệu quả hơn
         next_cities = self._get_sorted_next_cities(current_city, visited, matrix, num_cities)
 
+        # Thử đi qua từng thành phố tiếp theo
         for next_city in next_cities:
             cost_move = matrix[current_city][next_city]
             
@@ -103,6 +115,7 @@ class BacktrackSolverImproved(BaseSolver):
             if cost_move == float('inf'):
                 continue
 
+            # Đánh dấu đã đi
             visited[next_city] = True
             current_path.append(next_city)
             new_cost = current_cost + cost_move
@@ -110,6 +123,7 @@ class BacktrackSolverImproved(BaseSolver):
             if sleep_time > 0:
                 time.sleep(sleep_time)
 
+            # Gọi đệ quy
             self._backtrack_recursive_improved(
                 current_city=next_city,
                 count=count + 1,
