@@ -86,6 +86,7 @@ class TSPApp:
                 self.benchmark_win = BenchmarkWindow(self.root)
                 self.benchmark_win.title("Thử nghiệm thuật toán")
 
+    #Được gọi khi người dùng bấm nút [X]. Nó dừng luồng thuật toán (solver_thread.join) trước khi tắt hẳn ứng dụng để tránh lỗi "treo" tiến trình ngầm
     def _on_close(self):
         if self.solver:
             try:
@@ -99,7 +100,7 @@ class TSPApp:
                 pass
         self.root.destroy()
 
-    # --- Helpers tạo ma trận ---
+    # Tạo ra ma trận khoảng cách dựa trên kịch bản người dùng chọn (Đối xứng, Phân cụm, hoặc 1 chiều).
     def _create_random_symmetric_matrix(self, n):
         matrix = [[0] * n for _ in range(n)]
         for i in range(n):
@@ -133,7 +134,7 @@ class TSPApp:
                     else:
                         matrix[i][j] = random.randint(10, 100)
         return matrix
-    
+    #Biến ma trận số liệu thành tọa độ (x, y) để vẽ lên màn hình.
     def _generate_positions_from_distances(self, dist_matrix):
         n = len(dist_matrix)
         if n == 0:
@@ -163,7 +164,7 @@ class TSPApp:
         ]
         return coords_scaled
 
-
+    #Phương án dự phòng (Fallback): Nếu thuật toán MDS bị lỗi (hoặc dữ liệu quá ít), hàm này sẽ xếp các thành phố thành một vòng tròn đơn giản để đảm bảo chương trình không bị crash.
     def _generate_vis_nodes(self, n):
         self.vis_nodes = []
         if n == 0:
@@ -320,7 +321,7 @@ class TSPApp:
     def _on_num_cities_change(self, *args):
         if self.mode_var.get() == "input":
             self._reset()
-
+    #Chạy khi bấm nút "Tạo ngẫu nhiên". Gọi các hàm tạo ma trận ở trên, sau đó gọi MDS để tính tọa độ, rồi vẽ lên Canvas.
     def _generate_random_data(self):
         """Tạo ngẫu nhiên ma trận khoảng cách và toạ độ hiển thị."""
         if self.mode_var.get() != "input":
@@ -357,7 +358,7 @@ class TSPApp:
         self._update_city_treeview()
         self._redraw_canvas()
         self._lock_controls(False)
-
+    #Chạy khi bấm nút "Chạy Thuật Toán". Tạo một Luồng riêng (Thread) để chạy thuật toán (target=self.solver.solve), giúp giao diện không bị đơ.
     def _run_solver(self):
         if self.tsp_problem.num_cities == 0:
             messagebox.showwarning("Lỗi", "Chưa có dữ liệu. Vui lòng tạo ma trận.")
@@ -383,7 +384,7 @@ class TSPApp:
                                               args=(self._update_path_visual, self._on_solver_finish, sleep_time))
         self.solver_thread.daemon = True
         self.solver_thread.start()
-
+    #Đưa ứng dụng về trạng thái ban đầu: Dừng thuật toán, xóa dữ liệu cũ, xóa biểu đồ.
     def _reset(self, *args):
         if self.solver:
             try:
@@ -514,6 +515,7 @@ class TSPApp:
             solver_name = self.solver_var.get()
             self.root.after(0, self._handle_finish_on_main, solver_name, best_path, min_cost, runtime)
 
+
     def _draw_path_on_main(self, path, color, width):
         self._redraw_canvas()
         self._draw_path(path, color, width)
@@ -536,7 +538,7 @@ class TSPApp:
         runnable_solvers = [name for name, cls in SOLVER_CLASSES.items() if cls is not None]
         if all(name in self.comparison_results for name in runnable_solvers):
             self._update_comparison_charts()
-
+    #Xóa sạch màn hình và vẽ lại các chấm tròn (thành phố) dựa trên tọa độ đã tính.
     def _redraw_canvas(self):
         self.canvas.delete("all")
         self.canvas.update_idletasks()
@@ -553,6 +555,7 @@ class TSPApp:
             self.canvas.create_text(x_tk, y_tk - 10, text=city_name,
                                     anchor=tk.S, font=("Arial", 10, "bold"))
 
+    #Vẽ các đường nối (Line) giữa các thành phố. Vẽ thêm mũi tên (nếu là đồ thị 1 chiều) và hiển thị con số chi phí ở giữa đoạn đường.
     def _draw_path(self, path_indices, color, width):
         if not path_indices or len(path_indices) < 2 or not self.vis_nodes:
             return
